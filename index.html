@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>SPACEMAN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:    #020209;
+      --acc:   #6d28d9;
+      --acc2:  #0ea5e9;
+      --acc3:  #8b5cf6;
+      --cyan:  #22d3ee;
+      --green: #10b981;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    html, body {
+      width:100%; height:100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Space Grotesk', sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── CANVAS STARS ── */
+    canvas {
+      position: fixed;
+      inset: 0; z-index: 0;
+    }
+
+    /* ── NEBULA BLOBS ── */
+    .nebula {
+      position: fixed; border-radius: 50%; z-index: 1; filter: blur(80px); pointer-events:none;
+    }
+    .n1 {
+      width: 55vw; height: 55vw; max-width:500px; max-height:500px;
+      background: radial-gradient(circle, rgba(109,40,217,.22), transparent 70%);
+      top: -15%; left: -10%;
+      animation: nb1 18s ease-in-out infinite alternate;
+    }
+    .n2 {
+      width: 45vw; height: 45vw; max-width:420px; max-height:420px;
+      background: radial-gradient(circle, rgba(14,165,233,.15), transparent 70%);
+      bottom: -10%; right: -5%;
+      animation: nb2 22s ease-in-out infinite alternate;
+    }
+    .n3 {
+      width: 30vw; height: 30vw; max-width:300px; max-height:300px;
+      background: radial-gradient(circle, rgba(16,185,129,.1), transparent 70%);
+      top: 40%; left: 50%;
+      animation: nb3 14s ease-in-out infinite alternate;
+    }
+    @keyframes nb1 { to { transform: translate(40px, 60px) scale(1.1); } }
+    @keyframes nb2 { to { transform: translate(-30px, -40px) scale(1.08); } }
+    @keyframes nb3 { to { transform: translate(-50px, 30px) scale(.92); } }
+
+    /* ── SCAN LINE ── */
+    body::after {
+      content:'';
+      position: fixed; inset:0; z-index: 2;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.06) 2px,
+        rgba(0,0,0,.06) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* ── CARD ── */
+    .card {
+      position: relative; z-index: 10;
+      width: min(400px, 88vw);
+      padding: 48px 32px 44px;
+      text-align: center;
+      background: rgba(255,255,255,.025);
+      border-radius: 32px;
+      border: 1px solid rgba(255,255,255,.07);
+      backdrop-filter: blur(30px) saturate(1.4);
+      box-shadow:
+        0 0 0 1px rgba(109,40,217,.15),
+        0 40px 100px rgba(0,0,0,.7),
+        inset 0 1px 0 rgba(255,255,255,.08);
+      animation: cardIn .9s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(40px) scale(.95); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── ORBIT ── */
+    .orbit-wrap {
+      position: relative;
+      width: 96px; height: 96px;
+      margin: 0 auto 28px;
+    }
+    .orbit {
+      position: absolute; inset: -14px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      background:
+        linear-gradient(var(--bg), var(--bg)) padding-box,
+        linear-gradient(135deg, rgba(109,40,217,.5), rgba(14,165,233,.5)) border-box;
+      animation: orbitSpin 7s linear infinite;
+    }
+    .orbit-dot {
+      position: absolute;
+      width: 7px; height: 7px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan);
+      top: -3.5px; left: 50%;
+      transform: translateX(-50%);
+    }
+    @keyframes orbitSpin { to { transform: rotate(360deg); } }
+
+    .rocket {
+      font-size: 58px;
+      line-height: 96px;
+      display: block;
+      filter: drop-shadow(0 0 24px rgba(139,92,246,.9));
+      animation: rocketHover 3.5s ease-in-out infinite;
+    }
+    @keyframes rocketHover {
+      0%,100% { transform: translateY(0) rotate(-6deg); }
+      50%     { transform: translateY(-10px) rotate(6deg); }
+    }
+
+    /* ── TITLE ── */
+    .title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 40px; font-weight: 900;
+      letter-spacing: 6px;
+      line-height: 1;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #c4b5fd 0%, #93c5fd 45%, #6ee7b7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+    /* glitch effect */
+    .title::before, .title::after {
+      content: 'SPACEMAN';
+      position: absolute; inset: 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 40px; font-weight: 900;
+      letter-spacing: 6px;
+      background: inherit;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+    }
+    .title::before {
+      animation: glitch1 6s infinite;
+      clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+      transform: translateX(-2px);
+      filter: hue-rotate(180deg);
+    }
+    .title::after {
+      animation: glitch2 6s infinite;
+      clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+      transform: translateX(2px);
+    }
+    @keyframes glitch1 {
+      0%,92%,100% { opacity:0; }
+      93%          { opacity:.8; transform: translateX(-3px); }
+      95%          { opacity:.8; transform: translateX(2px); }
+      97%          { opacity:0; }
+    }
+    @keyframes glitch2 {
+      0%,94%,100% { opacity:0; }
+      95%          { opacity:.6; transform: translateX(3px); }
+      97%          { opacity:.6; transform: translateX(-1px); }
+      99%          { opacity:0; }
+    }
+
+    .sub {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,.25);
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+
+    /* ── PROGRESS ── */
+    .prog-track {
+      height: 3px;
+      background: rgba(255,255,255,.06);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .prog-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--acc3), var(--cyan));
+      box-shadow: 0 0 10px var(--cyan);
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+    /* shimmer */
+    .prog-track::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── STATUS ── */
+    .status-wrap {
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.05);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .s-icon { font-size: 20px; flex-shrink: 0; }
+    .s-text {
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,.55);
+      line-height: 1.5;
+      text-align: left;
+    }
+    .dots i {
+      display: inline-block;
+      width: 4px; height: 4px;
+      background: var(--cyan);
+      border-radius: 50%;
+      margin: 0 2px;
+      vertical-align: middle;
+      animation: dp 1.3s ease-in-out infinite;
+      box-shadow: 0 0 5px var(--cyan);
+    }
+    .dots i:nth-child(2) { animation-delay: .18s; }
+    .dots i:nth-child(3) { animation-delay: .36s; }
+    @keyframes dp {
+      0%,80%,100% { transform: scale(.5); opacity: .2; }
+      40%         { transform: scale(1.3); opacity: 1; }
+    }
+
+    /* ── ERROR ── */
+    .err {
+      display: none;
+      background: rgba(239,68,68,.07);
+      border: 1px solid rgba(239,68,68,.18);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px; font-weight: 600;
+      color: #fca5a5;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .btn-retry {
+      display: none;
+      width: 100%;
+      padding: 13px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.5);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px; font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-retry:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+    /* ── BADGES ── */
+    .badges {
+      display: flex; gap: 8px;
+      justify-content: center;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 10px; font-weight: 700;
+      color: rgba(255,255,255,.3);
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .live-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 1.8s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100%{ opacity:1; transform:scale(1); }
+      50%    { opacity:.3; transform:scale(.7); }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="cvs"></canvas>
+<div class="nebula n1"></div>
+<div class="nebula n2"></div>
+<div class="nebula n3"></div>
+
+<div class="card">
+  <div class="orbit-wrap">
+    <div class="orbit"><div class="orbit-dot"></div></div>
+    <span class="rocket">🚀</span>
+  </div>
+
+  <div class="title">SPACEMAN</div>
+  <div class="sub">Arcade &nbsp;·&nbsp; Real Time &nbsp;·&nbsp; Live</div>
+
+  <div class="prog-track">
+    <div class="prog-bar" id="prog"></div>
+  </div>
+
+  <div class="status-wrap" id="sw">
+    <span class="s-icon">🛰️</span>
+    <span class="s-text">Menghubungkan ke server <span class="dots"><i></i><i></i><i></i></span></span>
+  </div>
+
+  <div class="err" id="err">⚠️ Gagal terhubung. Periksa koneksi internet kamu.</div>
+  <button class="btn-retry" id="retry" onclick="boot()">↺ &nbsp;Coba Lagi</button>
+
+  <div class="badges">
+    <div class="badge"><span class="live-dot"></span>Live</div>
+    <div class="badge">💳 QRIS</div>
+    <div class="badge">⚡ Realtime</div>
+    <div class="badge">🔒 Aman</div>
+  </div>
+</div>
+
+<script>
+/* ── CANVAS STAR FIELD ── */
+const cvs = document.getElementById('cvs');
+const ctx = cvs.getContext('2d');
+let W, H, stars = [];
+
+function resize() {
+  W = cvs.width  = window.innerWidth;
+  H = cvs.height = window.innerHeight;
+}
+
+function mkStars() {
+  stars = [];
+  for (let i = 0; i < 220; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.2 + .1,
+      sp: Math.random() * .4 + .05,
+      op: Math.random(),
+      dop: (Math.random() * .005 + .002) * (Math.random() < .5 ? 1 : -1)
+    });
+  }
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    s.op += s.dop;
+    if (s.op > 1 || s.op < 0) s.dop *= -1;
+    s.y -= s.sp;
+    if (s.y < 0) { s.y = H; s.x = Math.random() * W; }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${Math.max(0, Math.min(1, s.op))})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(drawStars);
+}
+
+window.addEventListener('resize', () => { resize(); mkStars(); });
+resize(); mkStars(); drawStars();
+
+/* ── OTA CONNECT ── */
+// GANTI INI DENGAN RAW URL GITHUB LU
+const CONFIG_URL = 'https://raw.githubusercontent.com/apocalypse35674-jpg/judol/main/config.json';
+
+const progEl  = document.getElementById('prog');
+const swEl    = document.getElementById('sw');
+const errEl   = document.getElementById('err');
+const retryEl = document.getElementById('retry');
+
+function prog(p) { progEl.style.width = p + '%'; }
+
+function status(icon, html) {
+  swEl.style.display = 'flex';
+  swEl.innerHTML = `<span class="s-icon">${icon}</span><span class="s-text">${html}</span>`;
+}
+
+function fail() {
+  errEl.style.display = 'block';
+  retryEl.style.display = 'block';
+  status('❌', 'Koneksi gagal.');
+  prog(0);
+}
+
+async function boot() {
+  errEl.style.display  = 'none';
+  retryEl.style.display = 'none';
+  prog(8);
+  status('🛰️', 'Menghubungkan ke server <span class="dots"><i></i><i></i><i></i></span>');
+
+  try {
+    prog(30);
+    const res = await fetch(CONFIG_URL + '?_=' + Date.now());
+    if (!res.ok) throw new Error();
+    const cfg = await res.json();
+
+    prog(65);
+    const ip   = cfg.ip;
+    const port = cfg.port;
+    if (!ip || !port) throw new Error();
+
+    const url = 'http://' + ip + ':' + port;
+
+    prog(88);
+    status('✅', 'Server ditemukan, mengalihkan...');
+
+    // redirect otomatis
+    setTimeout(() => {
+      prog(100);
+      window.location.replace(url);
+    }, 500);
+
+  } catch(e) {
+    fail();
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
